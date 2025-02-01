@@ -2,7 +2,8 @@
 
 Kothakunjo (কথাকুঞ্জ) is a Bengali AI chatbot designed as a client-side web application using Google's Generative AI (Gemini) API. This project aims to provide an interactive and domain-specific chat experience while preserving the richness of the Bengali language and culture.
 
-![image](https://github.com/user-attachments/assets/4e5411bb-18ad-45e5-b943-0aa1da5bbf10)
+![image](https://github.com/user-attachments/assets/e94ff4a6-f01a-4d60-a9f4-80a3a665c789)
+
 
 # Table of Contents
 
