@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Solaiman Lipi', sans-serif;
+  }
+
+  body {
+    font-family: 'Solaiman Lipi', sans-serif;
+  }
+
+  /* Apply the font to headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Solaiman Lipi', sans-serif;
+  }
+
+  /* Apply the font to input fields and buttons */
+  input, button, textarea, select {
+    font-family: 'Solaiman Lipi', sans-serif;
+  }
+}
