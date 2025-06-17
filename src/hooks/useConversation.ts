@@ -1,9 +1,6 @@
 import { useState, useCallback } from 'react';
-import { ChatState, Message, ConversationContext } from '../types';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ChatState, ConversationContext } from '../types';
 import { domains } from '../constants/domains';
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
 const initialContext: ConversationContext = {
   mood: 'friendly',
@@ -243,7 +240,7 @@ export function useConversation() {
       const newContext = { ...prev.context };
       
       if (selectedDomain) {
-        newContext.domain = selectedDomain;
+        newContext.domain = selectedDomain as ConversationContext['domain'];
         newContext.mood = 'professional';
         newContext.complexity = 'moderate';
       } else {
@@ -296,12 +293,10 @@ export function useConversation() {
       
     if (isUser) {
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
         const recentMessages = state.messages.slice(-2);
         const history = recentMessages.map(msg => ({
-          role: msg.isUser ? "user" : "model",
-          parts: msg.text,
+          role: msg.isUser ? "user" : "assistant",
+          content: msg.text,
         }));
 
         const systemPrompt = selectedDomain
@@ -309,27 +304,39 @@ export function useConversation() {
           : basePrompt;
 
         history.unshift({
-          role: "user",
-          parts: systemPrompt,
+          role: "system",
+          content: systemPrompt,
         });
 
-        const chat = model.startChat({
-          history,
-          generationConfig: {
-            temperature: 0.8,
-            topK: 40,
-            topP: 0.9,
-            maxOutputTokens: 1024,
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json"
           },
+          body: JSON.stringify({
+            model: "deepseek/deepseek-r1-0528:free",
+            messages: [
+              ...history,
+              {
+                role: "user",
+                content: message
+              }
+            ],
+            temperature: 0.8,
+            top_k: 40,
+            top_p: 0.9,
+            max_tokens: 1024,
+          })
         });
 
-        const result = await chat.sendMessage(message);
-        const response = await result.response;
-        const responseText = response.text();
-
-        if (!responseText) {
+        const data = await response.json();
+        
+        if (!data.choices?.[0]?.message?.content) {
           throw new Error('No response received');
         }
+
+        const responseText = data.choices[0].message.content;
 
         setState(prev => ({
           ...prev,
@@ -344,10 +351,10 @@ export function useConversation() {
       } catch (error) {
         console.error('Error generating response:', error);
         
-        if (!import.meta.env.VITE_GEMINI_API_KEY) {
+        if (!import.meta.env.VITE_OPENROUTER_API_KEY) {
           setState(prev => ({
             ...prev,
-            error: 'API কী সেট করা হয়নি। অনুগ্রহ করে .env.local ফাইলে VITE_GEMINI_API_KEY সেট করুন।',
+            error: 'API কী সেট করা হয়নি। অনুগ্রহ করে .env.local ফাইলে VITE_OPENROUTER_API_KEY সেট করুন।',
             isProcessing: false,
           }));
           return;
